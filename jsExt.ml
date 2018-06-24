@@ -15,7 +15,6 @@
  *)
 
 open Yojson
-module Foo = struct
 module Hide = struct
   type 'a typ =
     | Assoc : (string * Safe.json) list typ
@@ -97,5 +96,3 @@ module Operator = struct
   let (<=<) x t = x >>= fun x -> Right (pack x t)
 end
 include Operator
-
-end
