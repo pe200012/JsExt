@@ -27,24 +27,33 @@ module Hide = struct
     | String : string typ
     | Tuple: Safe.json list typ
     | Variant : (string * (Safe.json option)) typ
+  type ('a,'b) either = 
+    | Left : 'a -> ('a,'b) either
+    | Right : 'b -> ('a,'b) either
+
     let (<.>) f g x = f (g x)
     let (>>.) g f x = f (g x)
+    let (>>=) e f =
+      match e with
+      | Left e -> Left e
+      | Right x -> f x
+
 end
 open Hide
 
-let extract : type a. Safe.json -> a typ -> a option =
+let extract : type a. Safe.json -> a typ -> (exn,a) either =
   fun js t ->
     match js,t with
-    | `Assoc x, Assoc -> Some x
-    | `Bool x, Bool -> Some x
-    | `Float x, Float -> Some x
-    | `Int x, Int -> Some x
-    | `List x, List -> Some x
-    | `Null, Null -> Some ()
-    | `String x, String -> Some x
-    | `Tuple x, Tuple -> Some x
-    | `Variant x, Variant -> Some x
-    | _,_ -> None
+    | `Assoc x, Assoc -> Right x
+    | `Bool x, Bool -> Right x
+    | `Float x, Float -> Right x
+    | `Int x, Int -> Right x
+    | `List x, List -> Right x
+    | `Null, Null -> Right ()
+    | `String x, String -> Right x
+    | `Tuple x, Tuple -> Right x
+    | `Variant x, Variant -> Right x
+    | _,_ -> Left (Invalid_argument "Non-corresponding Type")
 
 let pack : type a. a -> a typ -> Safe.json =
   fun v t ->
@@ -59,26 +68,26 @@ let pack : type a. a -> a typ -> Safe.json =
     | Tuple -> `Tuple v 
     | Variant -> `Variant v 
 
-let find_assoc : Safe.json -> string -> Safe.json =
+let find_assoc : Safe.json -> string -> (exn,Safe.json) either =
   fun js k ->
     match js with
-    | `Assoc x -> List.assoc k x
-    | _ -> raise (Invalid_argument "Unexpected JSON type")
+    | `Assoc x -> Right (List.assoc k x)
+    | _ -> Left (Invalid_argument "Unexpected JSON type")
 
-let find_index : Safe.json -> int -> Safe.json =
+let find_index : Safe.json -> int -> (exn,Safe.json) either =
   fun js i ->
     match js with 
-    | `List x -> List.nth x i
-    | _ -> raise (Invalid_argument "Unexpected JSON type")
+    | `List x -> Right (List.nth x i)
+    | _ -> Left (Invalid_argument "Unexpected JSON type")
 
-let add_assoc : Safe.json -> string * Safe.json -> Safe.json =
+let add_assoc : Safe.json -> string * Safe.json -> (exn,Safe.json) either =
   fun js (k,js') ->
     match js with
     | `Assoc x ->
       if List.exists (fst >>. ((=)k)) x
-      then raise (Invalid_argument "Duplicated key")
-      else `Assoc ((k,js') :: x)
-    | _ -> raise (Invalid_argument "Unexpected JSON type")
+      then Left (Invalid_argument "Duplicated key")
+      else Right (`Assoc ((k,js') :: x))
+    | _ -> Left (Invalid_argument "Unexpected JSON type")
 
 let lift e x =
   match x with
@@ -86,9 +95,10 @@ let lift e x =
   | None -> raise e
 
 module Operator = struct
-  let (>=>) x t = lift (Invalid_argument "") (extract x t)
+  let (>=>) = extract
   let (>|>) = find_assoc
   let (>->) = find_index
   let (>+>) = add_assoc
   let (<=<) = pack
 end
+include Operator

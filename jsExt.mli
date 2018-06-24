@@ -27,18 +27,23 @@ module Hide : sig
     | String : string typ
     | Tuple: Safe.json list typ
     | Variant : (string * (Safe.json option)) typ
+
+  type ('a,'b) either = 
+    | Left : 'a -> ('a,'b) either
+    | Right : 'b -> ('a,'b) either
+
 end
 open Hide
 
-val extract : Safe.json -> 'a typ -> 'a option
+val extract : Safe.json -> 'a typ -> (exn,'a) either
 
 val pack : 'a -> 'a typ -> Safe.json
 
-val find_assoc : Safe.json -> string -> Safe.json
+val find_assoc : Safe.json -> string -> (exn,Safe.json) either
 
-val find_index : Safe.json -> int -> Safe.json
+val find_index : Safe.json -> int -> (exn,Safe.json) either
 
-val add_assoc : Safe.json -> string * Safe.json -> Safe.json
+val add_assoc : Safe.json -> string * Safe.json -> (exn,Safe.json) either
 
 module Operator : sig
     val (>=>) : Safe.json -> 'a typ -> 'a 
