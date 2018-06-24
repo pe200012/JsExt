@@ -15,7 +15,7 @@
  *)
 
 open Yojson
-
+module Foo = struct
 module Hide = struct
   type 'a typ =
     | Assoc : (string * Safe.json) list typ
@@ -89,16 +89,13 @@ let add_assoc : Safe.json -> string * Safe.json -> (exn,Safe.json) either =
       else Right (`Assoc ((k,js') :: x))
     | _ -> Left (Invalid_argument "Unexpected JSON type")
 
-let lift e x =
-  match x with
-  | Some x -> x
-  | None -> raise e
-
 module Operator = struct
-  let (>=>) = extract
-  let (>|>) = find_assoc
-  let (>->) = find_index
-  let (>+>) = add_assoc
-  let (<=<) = pack
+  let (>=>) x t = x >>= fun x -> extract x t
+  let (>|>) x t = x >>= fun x -> find_assoc x t
+  let (>->) x t = x >>= fun x -> find_index x t
+  let (>+>) x t = x >>= fun x -> add_assoc x t
+  let (<=<) x t = x >>= fun x -> Right (pack x t)
 end
 include Operator
+
+end

@@ -12,47 +12,44 @@
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
- *)
+*)
 
-open Yojson
+open Yojson.Safe
 
-module Hide : sig
+module Hide :
+sig
   type 'a typ =
-    | Assoc : (string * Safe.json) list typ
+      Assoc : (string * json) list typ
     | Bool : bool typ
     | Float : float typ
     | Int : int typ
-    | List : Safe.json list typ
+    | List : json list typ
     | Null : unit typ
     | String : string typ
-    | Tuple: Safe.json list typ
-    | Variant : (string * (Safe.json option)) typ
-
-  type ('a,'b) either = 
-    | Left : 'a -> ('a,'b) either
-    | Right : 'b -> ('a,'b) either
-
+    | Tuple : json list typ
+    | Variant : (string * json option) typ
+  type ('a, 'b) either =
+      Left : 'a -> ('a, 'b) either
+    | Right : 'b -> ('a, 'b) either
 end
 open Hide
-
-val extract : Safe.json -> 'a typ -> (exn,'a) either
-
-val pack : 'a -> 'a typ -> Safe.json
-
-val find_assoc : Safe.json -> string -> (exn,Safe.json) either
-
-val find_index : Safe.json -> int -> (exn,Safe.json) either
-
-val add_assoc : Safe.json -> string * Safe.json -> (exn,Safe.json) either
-
-module Operator : sig
-    val (>=>) : Safe.json -> 'a typ -> 'a 
-    
-    val (<=<) : 'a -> 'a typ -> Safe.json
-
-    val (>|>) : Safe.json -> string -> Safe.json
-
-    val (>->) : Safe.json -> int -> Safe.json
-
-    val (>+>) : Safe.json -> string * Safe.json -> Safe.json
+val extract : json -> 'a typ -> (exn, 'a) either
+val pack : 'a -> 'a typ -> json
+val find_assoc : json -> string -> (exn, json) either
+val find_index : json -> int -> (exn, json) either
+val add_assoc : json -> string * json -> (exn, json) either
+module Operator :
+sig
+  val ( <=< ) : ('a, 'b) either -> 'b typ -> ('a, json) either
+  val ( >=> ) : (exn, json) either -> 'a typ -> (exn, 'a) either
+  val ( >|> ) : (exn, json) either -> string -> (exn, json) either
+  val ( >-> ) : (exn, json) either -> int -> (exn, json) either
+  val ( >+> ) : (exn, json) either -> string * json -> (exn, json) either
+  val ( <=< ) : ('a, 'b) either -> 'b typ -> ('a, json) either
 end
+val ( >=> ) : (exn, json) either -> 'a typ -> (exn, 'a) either
+val ( >|> ) : (exn, json) either -> string -> (exn, json) either
+val ( >-> ) : (exn, json) either -> int -> (exn, json) either
+val ( >+> ) : (exn, json) either -> string * json -> (exn, json) either
+val ( <=< ) : ('a, 'b) either -> 'b typ -> ('a, json) either
+
