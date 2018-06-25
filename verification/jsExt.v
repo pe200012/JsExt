@@ -102,4 +102,20 @@ Proof.
   auto.
 Qed.
 
+Lemma find_assoc_eq : forall (j k:json) (s s':string), j = k -> s = s' -> find_assoc j s = find_assoc k s'.
+Proof.
+  intros.
+  rewrite -> H.
+  rewrite -> H0.
+  reflexivity.
+Qed.
+
+Lemma find_index_eq : forall (j k:json) (m n:nat), j = k -> m = n -> find_index j m = find_index k n.
+Proof.
+  intros.
+  rewrite -> H.
+  rewrite -> H0.
+  reflexivity.
+Qed.
+
 
