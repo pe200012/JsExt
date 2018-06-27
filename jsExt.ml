@@ -26,19 +26,34 @@ module Hide = struct
     | String : string typ
     | Tuple: Safe.json list typ
     | Variant : (string * (Safe.json option)) typ
+
   type ('a,'b) either = 
     | Left : 'a -> ('a,'b) either
     | Right : 'b -> ('a,'b) either
 
     let (<.>) f g x = f (g x)
     let (>>.) g f x = f (g x)
+
+end
+open Hide
+
+module Utils = struct
+    let return x = Right x
+
     let (>>=) e f =
       match e with
       | Left e -> Left e
       | Right x -> f x
 
+    let revert = function
+    | Left x -> Right x
+    | Right x -> Left x
+
+    let concat : (('a,'b) either,('a,'b) either) either -> ('a,'b) either = function
+    | Left x -> x
+    | Right x -> x
 end
-open Hide
+open Utils
 
 let extract : type a. Safe.json -> a typ -> (exn,a) either =
   fun js t ->

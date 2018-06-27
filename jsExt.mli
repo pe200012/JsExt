@@ -33,6 +33,11 @@ sig
     | Right : 'b -> ('a, 'b) either
 end
 open Hide
+module Utils : sig
+  val return : 'a -> ('b,'a) either
+  val revert : ('a,'b) either -> ('b,'a) either
+  val concat : (('a,'b) either,('a,'b) either) either -> ('a,'b) either
+end
 val extract : json -> 'a typ -> (exn, 'a) either
 val pack : 'a -> 'a typ -> json
 val find_assoc : json -> string -> (exn, json) either
@@ -40,7 +45,6 @@ val find_index : json -> int -> (exn, json) either
 val add_assoc : json -> string * json -> (exn, json) either
 module Operator :
 sig
-  val ( <=< ) : ('a, 'b) either -> 'b typ -> ('a, json) either
   val ( >=> ) : (exn, json) either -> 'a typ -> (exn, 'a) either
   val ( >|> ) : (exn, json) either -> string -> (exn, json) either
   val ( >-> ) : (exn, json) either -> int -> (exn, json) either
